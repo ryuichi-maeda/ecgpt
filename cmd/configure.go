@@ -33,7 +33,7 @@ var configureCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		apiKey := getEnteredApiKey()
 
-		file, err := utils.GetCredentialsFile()
+		file, err := utils.GetNewCredentialsFile()
 		if err != nil {
 			fmt.Println(err)
 			return
