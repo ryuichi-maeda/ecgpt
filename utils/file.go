@@ -27,13 +27,20 @@ func GetConfigDirPath() (string, error) {
 	return configDirPath, nil
 }
 
-func GetCredentialsFile() (*os.File, error) {
+func GetCredentialsFilePath() (string, error) {
 	configDir, err := GetConfigDirPath()
+	if err != nil {
+		return "", err
+	}
+
+	return configDir + "/" + config.CREDENTIALS_FILE, nil
+}
+
+func GetNewCredentialsFile() (*os.File, error) {
+	credentialsFilePath, err := GetCredentialsFilePath()
 	if err != nil {
 		return nil, err
 	}
-
-	credentialsFilePath := configDir + "/" + config.CREDENTIALS_FILE
 
 	// If $HOME/.ecgpt/credentials.json exist, remove the file
 	if _, err := os.Stat(credentialsFilePath); os.IsExist(err) {
