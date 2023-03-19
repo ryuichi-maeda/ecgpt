@@ -6,39 +6,60 @@ package cmd
 
 import (
 	"bufio"
-	"encoding/json"
+	"context"
+	"errors"
 	"fmt"
-	"net/http"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
+	openai "github.com/sashabaranov/go-openai"
 
-	"ecgpt/config"
-	"ecgpt/structs"
 	"ecgpt/utils"
 )
 
-func createRequestBody(content string) structs.RequestBody {
-	message := structs.Message{
-			Role:    "user",
-			Content: content,
-	}
-	messages := []structs.Message{message}
-	reqBody := structs.RequestBody{
-		Model:    config.AI_MODEL,
-		Messages: messages,
-	}
 
-	return reqBody
-}
-
-func getUserMessage() string {
+func getUserMsg() string {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Print("You       > ")
 	scanner.Scan()
 
 	return scanner.Text()
+}
+
+func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCompletionRequest) (string, error) {
+	var resMsg string
+
+	stream, err := client.CreateChatCompletionStream(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	defer stream.Close()
+
+	fmt.Printf("Assistant > ")
+	for {
+		receivedResponse, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			fmt.Println("")
+			return resMsg, nil
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			return "", err
+		}
+		fmt.Printf("%s", receivedResponse.Choices[0].Delta.Content)
+		resMsg += receivedResponse.Choices[0].Delta.Content
+	}
+}
+
+func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMessage) []openai.ChatCompletionMessage {
+	msg := openai.ChatCompletionMessage{
+		Role: role,
+		Content: content,
+	}
+	return append(*reqMsgs, msg)
 }
 
 // chatCmd represents the chat command
@@ -48,51 +69,39 @@ var chatCmd = &cobra.Command{
 	Long: `You can chat with AI assistant via CLI interface.
 Before running this command, OpenAI API key must be configured with 'ecgpt configure' command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		userMessage := getUserMessage()
-		reqBody := createRequestBody(userMessage)
+		var reqMsgs []openai.ChatCompletionMessage
 
-		jsonString, err := json.Marshal(reqBody)
+		credentials, err := utils.GetCredentials()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+		client := openai.NewClient(credentials.OpenAIAPIKey)
+		ctx := context.Background()
 
-		req, err := utils.CreateRequestForOpenAIAPI(jsonString)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		for {
+			userMsg := getUserMsg()
 
-		client := &http.Client{}
-		res, err := client.Do(req)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer res.Body.Close()
-
-		// If the response is not OK
-		if res.StatusCode != 200 {
-			switch {
-			case res.StatusCode == 401:
-				fmt.Println("OpenAI API Key you set may be incorrect.")
-			default:
-				fmt.Println(res.Status)
+			// Exit
+			if userMsg == "exit" {
+				break
 			}
-			return
-		}
 
-		// Decode the response body
-		resBody := &structs.ResponseBody{}
-		decoder := json.NewDecoder(res.Body)
-		err = decoder.Decode(resBody)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+			reqMsgs = addReqMsg(openai.ChatMessageRoleUser, userMsg, &reqMsgs)
 
-		for _, choice := range resBody.Choices {
-			fmt.Println("Assistant > ", choice.Message.Content)
+			request := openai.ChatCompletionRequest{
+				Model: openai.GPT3Dot5Turbo,
+				Messages: reqMsgs,
+				Stream: true,
+			}
+
+			resMsg, err := chatCompletion(*client, ctx, request)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			reqMsgs = addReqMsg(openai.ChatMessageRoleAssistant, resMsg, &reqMsgs)
 		}
 	},
 }
