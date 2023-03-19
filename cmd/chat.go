@@ -10,11 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
 	openai "github.com/sashabaranov/go-openai"
 
+	"ecgpt/config"
 	"ecgpt/utils"
 )
 
@@ -54,6 +56,14 @@ func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCo
 	}
 }
 
+func getBehaviorContent() (string, error) {
+	content, err := ioutil.ReadFile(config.BEHAVIOR_FILE)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
+}
+
 func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMessage) []openai.ChatCompletionMessage {
 	msg := openai.ChatCompletionMessage{
 		Role: role,
@@ -79,15 +89,28 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 		client := openai.NewClient(credentials.OpenAIAPIKey)
 		ctx := context.Background()
 
+		isFirst := true
 		for {
-			userMsg := getUserMsg()
+			var content string
 
-			// Exit
-			if userMsg == "exit" {
-				break
+			// If the chat is first turn, set the behavior of the assistant
+			if isFirst {
+				content, err = getBehaviorContent()
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				isFirst = false
+			} else {
+				content = getUserMsg()
+
+				// Exit
+				if content == "exit" {
+					break
+				}
 			}
 
-			reqMsgs = addReqMsg(openai.ChatMessageRoleUser, userMsg, &reqMsgs)
+			reqMsgs = addReqMsg(openai.ChatMessageRoleUser, content, &reqMsgs)
 
 			request := openai.ChatCompletionRequest{
 				Model: openai.GPT3Dot5Turbo,
