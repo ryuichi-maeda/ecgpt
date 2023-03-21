@@ -17,12 +17,15 @@ func GetCredentials() (*structs.Credentials, error) {
 
 	file, err := os.Open(credentialsFilePath)
 	if err != nil {
-		err = errors.New("Error: Before running this command, OpenAI API key must be configured with 'ecgpt configure' command.")
+		err = errors.New("error: Before running this command, OpenAI API key must be configured with 'ecgpt configure' command. ")
 		return nil, err
 	}
 	defer file.Close()
 
 	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
 
 	var credentials structs.Credentials
 	json.Unmarshal(data, &credentials)

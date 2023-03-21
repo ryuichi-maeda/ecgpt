@@ -1,6 +1,5 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -13,13 +12,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/spf13/cobra"
 	openai "github.com/sashabaranov/go-openai"
+	"github.com/spf13/cobra"
 
 	"ecgpt/config"
 	"ecgpt/utils"
 )
-
 
 func getUserMsg() string {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -66,7 +64,7 @@ func getBehaviorContent() (string, error) {
 
 func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMessage) []openai.ChatCompletionMessage {
 	msg := openai.ChatCompletionMessage{
-		Role: role,
+		Role:    role,
 		Content: content,
 	}
 	return append(*reqMsgs, msg)
@@ -106,6 +104,7 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 
 				// Exit
 				if content == "exit" {
+					// TODO: Save this conversation exchange
 					break
 				}
 			}
@@ -113,9 +112,9 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 			reqMsgs = addReqMsg(openai.ChatMessageRoleUser, content, &reqMsgs)
 
 			request := openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
+				Model:    openai.GPT3Dot5Turbo,
 				Messages: reqMsgs,
-				Stream: true,
+				Stream:   true,
 			}
 
 			resMsg, err := chatCompletion(*client, ctx, request)
