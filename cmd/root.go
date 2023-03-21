@@ -30,13 +30,9 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ecgpt",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "English Conversation/Chat CLI Tool using GPT model",
+	Long: `This is a English Conversation/Chat CLI Tool using GPT model.
+If you want to use this CLI tool, you have to set OpenAI API Key using 'ecgpt configure' command at first.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

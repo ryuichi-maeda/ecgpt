@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -23,7 +22,7 @@ import (
 func getUserMsg() string {
 	scanner := bufio.NewScanner(os.Stdin)
 
-	fmt.Print("You       > ")
+	fmt.Print(config.ROLE_OUTPUT_USER)
 	scanner.Scan()
 
 	return scanner.Text()
@@ -38,7 +37,7 @@ func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCo
 	}
 	defer stream.Close()
 
-	fmt.Printf("Assistant > ")
+	fmt.Print(config.ROLE_OUTPUT_ASSISTANT)
 	for {
 		receivedResponse, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
@@ -56,7 +55,7 @@ func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCo
 }
 
 func getBehaviorContent() (string, error) {
-	content, err := ioutil.ReadFile(config.BEHAVIOR_FILE)
+	content, err := os.ReadFile(config.BEHAVIOR_FILE)
 	if err != nil {
 		return "", err
 	}

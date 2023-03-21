@@ -4,24 +4,26 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"os"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
 	"ecgpt/structs"
 	"ecgpt/utils"
 )
 
-func getEnteredApiKey() string {
-	scanner := bufio.NewScanner(os.Stdin)
+func getEnteredApiKey() (string, error) {
+	prompt := promptui.Prompt{
+		Label: "OpenAI API Key",
+	}
+	apiKey, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
 
-	fmt.Print("OpenAI API Key: ")
-	scanner.Scan()
-
-	return scanner.Text()
+	return apiKey, nil
 }
 
 // configureCmd represents the configure command
@@ -30,7 +32,11 @@ var configureCmd = &cobra.Command{
 	Short: "Set a OpenAI API Key",
 	Long:  `Set a OpenAI API key. You can get API keys from https://platform.openai.com/account/api-keys, but an OpenAI account is required.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apiKey := getEnteredApiKey()
+		apiKey, err := getEnteredApiKey()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
 		file, err := utils.GetNewCredentialsFile()
 		if err != nil {
