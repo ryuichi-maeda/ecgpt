@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"ecgpt/config"
 	"ecgpt/utils"
 	"encoding/json"
 	"fmt"
@@ -103,9 +104,9 @@ var historyCmd = &cobra.Command{
 		for _, msg := range msgs {
 			switch msg.Role {
 			case openai.ChatMessageRoleUser:
-				fmt.Print("You       > ")
+				fmt.Print(config.ROLE_OUTPUT_USER)
 			case openai.ChatMessageRoleAssistant:
-				fmt.Print("Assistant > ")
+				fmt.Print(config.ROLE_OUTPUT_ASSISTANT)
 			default:
 				continue
 			}
