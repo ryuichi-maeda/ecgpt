@@ -1,6 +1,5 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -12,8 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"ecgpt/utils"
 	"ecgpt/structs"
+	"ecgpt/utils"
 )
 
 func getEnteredApiKey() string {
@@ -29,7 +28,7 @@ func getEnteredApiKey() string {
 var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "Set a OpenAI API Key",
-	Long: `Set a OpenAI API key. You can get API keys from https://platform.openai.com/account/api-keys, but an OpenAI account is required.`,
+	Long:  `Set a OpenAI API key. You can get API keys from https://platform.openai.com/account/api-keys, but an OpenAI account is required.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		apiKey := getEnteredApiKey()
 
