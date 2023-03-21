@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"ecgpt/config"
 )
@@ -52,6 +53,51 @@ func GetNewCredentialsFile() (*os.File, error) {
 
 	// Create a new $HOME/.ecgpt/credentials.json file
 	file, err := os.Create(credentialsFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func GetHistoryDirPath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+
+	historyDirPath := homeDir + "/" + config.CONFIG_DIR + "/" + config.HISTORY_DIR
+
+	// If $HOME/.ecgpt dir does not exist, create the dir
+	if f, err := os.Stat(historyDirPath); os.IsNotExist(err) || !f.IsDir() {
+		err = os.Mkdir(historyDirPath, 0755)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return historyDirPath, nil
+}
+
+func GetHistoryFilePath() (string, error) {
+	historyDir, err := GetHistoryDirPath()
+	if err != nil {
+		return "", err
+	}
+
+	t := time.Now()
+	return historyDir + "/" + t.Format("2006-01-02_15:04:05") + ".json", nil
+}
+
+func GetNewHistoryFile() (*os.File, error) {
+	historyFilePath, err := GetHistoryFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new $HOME/.ecgpt/history/2006-01-02_15:04:05.json file
+	file, err := os.Create(historyFilePath)
 	if err != nil {
 		return nil, err
 	}

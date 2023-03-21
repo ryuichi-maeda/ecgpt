@@ -6,6 +6,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -70,6 +71,19 @@ func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMess
 	return append(*reqMsgs, msg)
 }
 
+func saveConversation(chatCompletionMessage *[]openai.ChatCompletionMessage) error {
+	file, err := utils.GetNewHistoryFile()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	encoder.Encode(chatCompletionMessage)
+	return nil
+}
+
 // chatCmd represents the chat command
 var chatCmd = &cobra.Command{
 	Use:   "chat",
@@ -89,10 +103,14 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 
 		isFirst := true
 		for {
-			var content string
+			var (
+				role    string
+				content string
+			)
 
 			// If the chat is first turn, set the behavior of the assistant
 			if isFirst {
+				role = openai.ChatMessageRoleSystem
 				content, err = getBehaviorContent()
 				if err != nil {
 					fmt.Println(err)
@@ -100,16 +118,22 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 				}
 				isFirst = false
 			} else {
+				role = openai.ChatMessageRoleUser
 				content = getUserMsg()
 
 				// Exit
 				if content == "exit" {
-					// TODO: Save this conversation exchange
+					// Save conversation
+					err := saveConversation(&reqMsgs)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
 					break
 				}
 			}
 
-			reqMsgs = addReqMsg(openai.ChatMessageRoleUser, content, &reqMsgs)
+			reqMsgs = addReqMsg(role, content, &reqMsgs)
 
 			request := openai.ChatCompletionRequest{
 				Model:    openai.GPT3Dot5Turbo,
