@@ -46,7 +46,6 @@ func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCo
 		}
 
 		if err != nil {
-			fmt.Println(err)
 			return "", err
 		}
 		fmt.Printf("%s", receivedResponse.Choices[0].Delta.Content)
