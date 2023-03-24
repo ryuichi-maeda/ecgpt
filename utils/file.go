@@ -61,13 +61,12 @@ func GetNewCredentialsFile() (*os.File, error) {
 }
 
 func GetHistoryDirPath() (string, error) {
-	homeDir, err := os.UserHomeDir()
+	configDir, err := GetConfigDirPath()
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 
-	historyDirPath := homeDir + "/" + config.CONFIG_DIR + "/" + config.HISTORY_DIR
+	historyDirPath := configDir + "/" + config.HISTORY_DIR
 
 	// If $HOME/.ecgpt dir does not exist, create the dir
 	if f, err := os.Stat(historyDirPath); os.IsNotExist(err) || !f.IsDir() {
