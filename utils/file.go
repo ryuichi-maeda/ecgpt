@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"ecgpt/config"
@@ -79,23 +80,14 @@ func GetHistoryDirPath() (string, error) {
 	return historyDirPath, nil
 }
 
-func GetHistoryFilePath() (string, error) {
+func GetNewHistoryFile(summary string) (*os.File, error) {
 	historyDir, err := GetHistoryDirPath()
-	if err != nil {
-		return "", err
-	}
-
-	t := time.Now()
-	return historyDir + "/" + t.Format("2006-01-02_15:04:05") + ".json", nil
-}
-
-func GetNewHistoryFile() (*os.File, error) {
-	historyFilePath, err := GetHistoryFilePath()
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a new $HOME/.ecgpt/history/2006-01-02_15:04:05.json file
+	// Create a new $HOME/.ecgpt/history/2006-01-02_15:04:05_{summary}.json file
+	historyFilePath := historyDir + "/" + time.Now().Format("2006-01-02_15:04:05") + "_" + strings.ReplaceAll(summary, " ", "_") + ".json"
 	file, err := os.Create(historyFilePath)
 	if err != nil {
 		return nil, err
