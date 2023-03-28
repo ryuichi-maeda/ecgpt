@@ -53,14 +53,6 @@ func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCo
 	}
 }
 
-func getBehaviorContent() (string, error) {
-	content, err := os.ReadFile(config.BEHAVIOR_FILE)
-	if err != nil {
-		return "", err
-	}
-	return string(content), nil
-}
-
 func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMessage) []openai.ChatCompletionMessage {
 	msg := openai.ChatCompletionMessage{
 		Role:    role,
@@ -109,11 +101,7 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 			// If the chat is first turn, set the behavior of the assistant
 			if isFirst {
 				role = openai.ChatMessageRoleSystem
-				content, err = getBehaviorContent()
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
+				content = config.BEHAVIOR_CONTENT
 				isFirst = false
 			} else {
 				role = openai.ChatMessageRoleUser
