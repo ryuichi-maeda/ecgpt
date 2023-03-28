@@ -120,12 +120,14 @@ func TestGetNewHistoryFile(t *testing.T) {
 	defer os.Setenv("HOME", origHomeDir)
 	os.Setenv("HOME", tmpHomeDir)
 
+	summary := "summary"
+
 	// Test the function when the history file does not exist
-	file, err := GetNewHistoryFile()
+	file, err := GetNewHistoryFile(summary)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
-	if _, err := os.Stat(tmpHomeDir + "/.ecgpt/history/" + time.Now().Format("2006-01-02_15:04:05") + ".json"); os.IsNotExist(err) {
+	if _, err := os.Stat(tmpHomeDir + "/.ecgpt/history/" + time.Now().Format("2006-01-02_15:04:05") + "_" + summary + ".json"); os.IsNotExist(err) {
 		t.Errorf("expected history file to be created but not found: %v", err)
 	}
 	if file == nil {
@@ -134,11 +136,11 @@ func TestGetNewHistoryFile(t *testing.T) {
 	file.Close()
 
 	// Test the function when the history file already exists
-	file, err = GetNewHistoryFile()
+	file, err = GetNewHistoryFile(summary)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
-	if _, err := os.Stat(tmpHomeDir + "/.ecgpt/history/" + time.Now().Format("2006-01-02_15:04:05") + ".json"); os.IsNotExist(err) {
+	if _, err := os.Stat(tmpHomeDir + "/.ecgpt/history/" + time.Now().Format("2006-01-02_15:04:05") + "_" + summary + ".json"); os.IsNotExist(err) {
 		t.Errorf("expected history file to exist but not found: %v", err)
 	}
 	if file == nil {

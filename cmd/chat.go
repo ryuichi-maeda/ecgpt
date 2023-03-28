@@ -28,7 +28,7 @@ func getUserMsg() string {
 	return scanner.Text()
 }
 
-func chatCompletion(client openai.Client, ctx context.Context, req openai.ChatCompletionRequest) (string, error) {
+func chatCompletionStream(client openai.Client, ctx context.Context, req openai.ChatCompletionRequest) (string, error) {
 	var resMsg string
 
 	stream, err := client.CreateChatCompletionStream(ctx, req)
@@ -61,8 +61,8 @@ func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMess
 	return append(*reqMsgs, msg)
 }
 
-func saveConversation(chatCompletionMessage *[]openai.ChatCompletionMessage) error {
-	file, err := utils.GetNewHistoryFile()
+func saveConversation(summary string, chatCompletionMessage *[]openai.ChatCompletionMessage) error {
+	file, err := utils.GetNewHistoryFile(summary)
 	if err != nil {
 		return err
 	}
@@ -72,6 +72,29 @@ func saveConversation(chatCompletionMessage *[]openai.ChatCompletionMessage) err
 	encoder.SetIndent("", "  ")
 	encoder.Encode(chatCompletionMessage)
 	return nil
+}
+
+func summarize(reqMsgs []openai.ChatCompletionMessage, client *openai.Client, ctx context.Context) (string, error) {
+	msg := openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleUser,
+		Content: config.SUMMARIZE_CONTENT,
+	}
+	reqMsgs = append(reqMsgs, msg)
+
+	req := openai.ChatCompletionRequest{
+		Model:    openai.GPT3Dot5Turbo,
+		Messages: reqMsgs[1:], // Remove system behavior
+	}
+
+	res, err := client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
+	summary := res.Choices[0].Message.Content
+	fmt.Println("\nSummary: ", summary)
+
+	return summary, nil
 }
 
 // chatCmd represents the chat command
@@ -109,8 +132,15 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 
 				// Exit
 				if content == "exit" {
+					// Summarize
+					summary, err := summarize(reqMsgs, client, ctx)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
 					// Save conversation
-					err := saveConversation(&reqMsgs)
+					err = saveConversation(summary, &reqMsgs)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -127,7 +157,7 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 				Stream:   true,
 			}
 
-			resMsg, err := chatCompletion(*client, ctx, request)
+			resMsg, err := chatCompletionStream(*client, ctx, request)
 			if err != nil {
 				fmt.Println(err)
 				return
