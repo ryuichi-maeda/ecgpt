@@ -6,7 +6,6 @@ package cmd
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -59,19 +58,6 @@ func addReqMsg(role string, content string, reqMsgs *[]openai.ChatCompletionMess
 		Content: content,
 	}
 	return append(*reqMsgs, msg)
-}
-
-func saveConversation(summary string, chatCompletionMessage *[]openai.ChatCompletionMessage) error {
-	file, err := utils.GetNewHistoryFile(summary)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	encoder.Encode(chatCompletionMessage)
-	return nil
 }
 
 func summarize(reqMsgs []openai.ChatCompletionMessage, client *openai.Client, ctx context.Context) (string, error) {
@@ -140,7 +126,7 @@ Before running this command, OpenAI API key must be configured with 'ecgpt confi
 					}
 
 					// Save conversation
-					err = saveConversation(summary, &reqMsgs)
+					err = utils.SaveConversation(summary, &reqMsgs)
 					if err != nil {
 						fmt.Println(err)
 						return

@@ -10,46 +10,14 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/manifoldco/promptui"
 	"github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
 )
 
-func getHistoryFilePaths() ([]string, error) {
-	historyDirPath, err := utils.GetHistoryDirPath()
-	if err != nil {
-		return nil, err
-	}
-
-	var historyFilePaths []string
-	err = filepath.Walk(historyDirPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		for i := len(path) - 1; i >= 0; i-- {
-			if path[i] == '.' && path[i:] == ".json" {
-				historyFilePaths = append(historyFilePaths, path[len(historyDirPath)+1:i])
-			}
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return historyFilePaths, nil
-}
-
-func getHistoryFilePath() (string, error) {
-	historyFilePaths, err := getHistoryFilePaths()
+func selectHistoryFilePath() (string, error) {
+	historyFilePaths, err := utils.GetHistoryFilePaths()
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +41,7 @@ var historyCmd = &cobra.Command{
 	Short: "Check past conversations",
 	Long:  `You can check a past conversation you selected.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		historyFilePath, err := getHistoryFilePath()
+		historyFilePath, err := selectHistoryFilePath()
 		if err != nil {
 			fmt.Println(err)
 			return
