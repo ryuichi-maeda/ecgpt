@@ -13,9 +13,11 @@ import (
 	"ecgpt/utils"
 )
 
-func getEnteredApiKey() (string, error) {
+func getEnteredApiKey(openAIApiKey string) (string, error) {
 	prompt := promptui.Prompt{
-		Label: "OpenAI API Key",
+		Label:     "OpenAI API Key",
+		Default:   openAIApiKey,
+		AllowEdit: true,
 	}
 	apiKey, err := prompt.Run()
 	if err != nil {
@@ -31,7 +33,13 @@ var configureCmd = &cobra.Command{
 	Short: "Set a OpenAI API Key",
 	Long:  `Set a OpenAI API key. You can get API keys from https://platform.openai.com/account/api-keys, but an OpenAI account is required.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apiKey, err := getEnteredApiKey()
+		credentials, err := utils.GetCredentialsForEdit()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		apiKey, err := getEnteredApiKey(credentials.OpenAIAPIKey)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -45,7 +53,7 @@ var configureCmd = &cobra.Command{
 		defer file.Close()
 
 		// Set credentials
-		credentials := utils.Credentials{
+		credentials = &utils.Credentials{
 			OpenAIAPIKey: apiKey,
 		}
 

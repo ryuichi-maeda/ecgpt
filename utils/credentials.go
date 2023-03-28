@@ -28,14 +28,6 @@ func GetNewCredentialsFile() (*os.File, error) {
 		return nil, err
 	}
 
-	// If $HOME/.ecgpt/credentials.json exist, remove the file
-	if _, err := os.Stat(credentialsFilePath); os.IsExist(err) {
-		err := os.Remove(credentialsFilePath)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// Create a new $HOME/.ecgpt/credentials.json file
 	file, err := os.Create(credentialsFilePath)
 	if err != nil {
@@ -67,4 +59,18 @@ func GetCredentials() (*Credentials, error) {
 	json.Unmarshal(data, &credentials)
 
 	return &credentials, nil
+}
+
+func GetCredentialsForEdit() (*Credentials, error) {
+	credentialsFilePath, err := GetCredentialsFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	// If $HOME/.ecgpt/credentials.json exist, return the Credentials
+	if _, err := os.Stat(credentialsFilePath); !os.IsNotExist(err) {
+		return GetCredentials()
+	}
+
+	return &Credentials{}, nil
 }
