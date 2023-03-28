@@ -10,7 +10,6 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"ecgpt/structs"
 	"ecgpt/utils"
 )
 
@@ -46,7 +45,7 @@ var configureCmd = &cobra.Command{
 		defer file.Close()
 
 		// Set credentials
-		credentials := structs.Credentials{
+		credentials := utils.Credentials{
 			OpenAIAPIKey: apiKey,
 		}
 

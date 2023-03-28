@@ -7,8 +7,11 @@ import (
 	"os"
 
 	"ecgpt/config"
-	"ecgpt/structs"
 )
+
+type Credentials struct {
+	OpenAIAPIKey string `json:"open_ai_api_key"`
+}
 
 func GetCredentialsFilePath() (string, error) {
 	configDir, err := GetConfigDirPath()
@@ -42,7 +45,7 @@ func GetNewCredentialsFile() (*os.File, error) {
 	return file, nil
 }
 
-func GetCredentials() (*structs.Credentials, error) {
+func GetCredentials() (*Credentials, error) {
 	credentialsFilePath, err := GetCredentialsFilePath()
 	if err != nil {
 		return nil, err
@@ -60,7 +63,7 @@ func GetCredentials() (*structs.Credentials, error) {
 		return nil, err
 	}
 
-	var credentials structs.Credentials
+	var credentials Credentials
 	json.Unmarshal(data, &credentials)
 
 	return &credentials, nil
