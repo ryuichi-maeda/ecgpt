@@ -64,6 +64,7 @@ func GetHistoryFilePaths() ([]string, error) {
 
 		for i := len(path) - 1; i >= 0; i-- {
 			if path[i] == '.' && path[i:] == ".json" {
+				// Append the file path without the history dir path and the .json extension
 				historyFilePaths = append(historyFilePaths, path[len(historyDirPath)+1:i])
 			}
 		}
