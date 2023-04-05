@@ -85,3 +85,56 @@ func TestGetNewHistoryFile(t *testing.T) {
 	}
 	file.Close()
 }
+
+func TestGetHistoryFilePaths(t *testing.T) {
+	// Create a temporary home directory for testing
+	tmpHomeDir, err := os.MkdirTemp("", "test_home")
+	if err != nil {
+		t.Fatalf("failed to create temporary home directory: %v", err)
+	}
+	defer os.RemoveAll(tmpHomeDir)
+
+	// Set the temporary home directory as the user's home directory
+	origHomeDir := os.Getenv("HOME")
+	defer os.Setenv("HOME", origHomeDir)
+	os.Setenv("HOME", tmpHomeDir)
+
+	// Test the function when the history directory does not exist
+	filePaths, err := GetHistoryFilePaths()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if _, err := os.Stat(tmpHomeDir + "/.ecgpt/history"); os.IsNotExist(err) {
+		t.Errorf("expected history directory to be created but not found: %v", err)
+	}
+	if len(filePaths) != 0 {
+		t.Errorf("expected no history files to be found but got %d", len(filePaths))
+	}
+
+	// Test the function when the history directory already exists
+	var historyFiles [2]*os.File
+	historyFiles[0], err = GetNewHistoryFile("summary1")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	historyFiles[1], err = GetNewHistoryFile("summary2")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	filePaths, err = GetHistoryFilePaths()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if _, err := os.Stat(tmpHomeDir + "/.ecgpt/history"); os.IsNotExist(err) {
+		t.Errorf("expected history directory to exist but not found: %v", err)
+	}
+	if len(filePaths) != 2 {
+		t.Errorf("expected 2 history files to be found but got %d", len(filePaths))
+	}
+	for i, file := range historyFiles {
+		if file.Name() != tmpHomeDir+"/.ecgpt/history/"+filePaths[i]+".json" {
+			t.Errorf("expected file path to be %s but got %s", file.Name(), filePaths[0])
+		}
+		file.Close()
+	}
+}
